@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1010832053599",
+    "project_id": "trainer-app-6261b",
+    "storage_bucket": "trainer-app-6261b.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1010832053599:android:d2f8d2d586919d8d6d92ea",
+        "android_client_info": {
+          "package_name": "gym.app.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCk56HZf2d52--QYKzg2S9DCm0B7dWvA60"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
