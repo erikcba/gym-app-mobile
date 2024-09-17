@@ -1,18 +1,15 @@
 import React, { useEffect, useState } from 'react'
-import { View, Text, ActivityIndicator, Button, ScrollView } from 'react-native'
+import { View, Text, ActivityIndicator, Button, ScrollView, TouchableOpacity, FlatList } from 'react-native'
 import { getAuth, onAuthStateChanged } from "firebase/auth"
 import { db } from "../../firebaseConfig"
 import { doc, getDoc, collection, getDocs } from "firebase/firestore"
 import { styled } from 'nativewind'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-
+import Icon from 'react-native-vector-icons/Ionicons'
+import { useNavigation } from '@react-navigation/native';
 
 const Container = styled(View)
-const Heading = styled(Text)
 const SubHeading = styled(Text)
-const Table = styled(View)
-const TableRow = styled(View)
-const TableCell = styled(View)
 
 const VerPlan = ({ route }) => {
     const [userId, setUserId] = useState("")
@@ -21,6 +18,9 @@ const VerPlan = ({ route }) => {
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(true)
     const { dayId, dayName } = route.params
+    const navigation = useNavigation()
+
+
 
     useEffect(() => {
         const auth = getAuth()
@@ -95,48 +95,49 @@ const VerPlan = ({ route }) => {
         return () => unsubscribe()
     }, [dayId])
 
+    const renderItem = ({ item }) => (
+        <View className="bg-zinc-800 p-4 mb-3 rounded-md flex flex-col justify-center">
+            <View className="flex-row justify-between items-center">
+                <View className="mx-auto flex flex-col justify-center">
+                    <Text className="text-2xl text-yellow-400 font-semibold">{item.name}</Text>
+                    <Text className="text-white mx-auto text-lg font-semibold">{item.sets} X {item.reps}</Text>
+                </View>
+
+                <TouchableOpacity className="bg-zinc-700 p-2 rounded-md" onPress={() => navigation.navigate('DetalleEjercicio', { exercise: item }) }>
+                    <Icon name="chevron-forward-outline" size={32} color="gray" />
+                </TouchableOpacity>
+            </View>
+        </View>
+    )
+
     return (
-        <ScrollView className=" bg-zinc-800" >
-            <Container className="items-center justify-start rounded-md bg-zinc-800 p-5 my-5 min-h-screen">
-                <Container className="items-center justify-center gap-5 w-full">
 
-                    {loading ? (
-                        <Container className="items-center justify-center gap-2">
-                            <Text className="text-lg font-semibold text-center text-white">Cargando</Text>
-                            <ActivityIndicator size="large" color="#ffffff" />
-                        </Container>
-                    ) : day ? (
+        <Container className="items-center justify-start bg-zinc-900 p-3  min-h-screen">
+            <Container className="items-center justify-center gap-5 w-full">
 
-                        <Container className="w-full" key={dayId}>
-                            <SubHeading className="text-lg font-semibold text-center text-zinc bg-yellow-400 rounded-md p-2">
-                                {day.name}
-                            </SubHeading>
-                            <Table className="mt-4">
-                                <TableRow className="bg-zinc-900 text-white py-4 flex-row justify-between ">
-                                    <TableCell className="px-4 py-2 text-center"><Text className="text-white">Ejercicio</Text></TableCell>
-                                    <TableCell className="px-4 py-2 text-center"><Text className="text-white">Series</Text></TableCell>
-                                    <TableCell className="px-4 py-2 text-center"><Text className="text-white">Repeticiones</Text></TableCell>
-                                    <TableCell className="px-4 py-2 text-center"><Text className="text-white">Anotaciones</Text></TableCell>
-                                </TableRow>
-                                {day.exercises.map((exercise, exerciseIndex) => (
-                                    <TableRow className={`${exerciseIndex % 2 === 0 ? 'bg-zinc-800' : 'bg-zinc-700'} flex-row items-center justify-around`} key={exerciseIndex}>
-                                        <TableCell className="px-4 py-2 w-1/3"><Text className="text-center text-white">{exercise.name}</Text></TableCell>
-                                        <TableCell className="px-4 py-2 w-1/4"><Text className="text-center text-white">{exercise.sets}</Text></TableCell>
-                                        <TableCell className="px-4 py-2 w-1/4"><Text className="text-center text-white">{exercise.reps}</Text></TableCell>
-                                        <TableCell className="px-4 py-2 w-1/4">
-                                            <Button title="+" onPress={() => { }} color="#444" />
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                            </Table>
-                        </Container>
+                {loading ? (
+                    <Container className="items-center justify-center gap-2">
+                        <Text className="text-lg font-semibold text-center text-white">Cargando</Text>
+                        <ActivityIndicator size="large" color="#ffffff" />
+                    </Container>
+                ) : day ? (
 
-                    ) : (
-                        <Text className="text-lg font-semibold text-center text-white">No hay plan para mostrar</Text>
-                    )}
-                </Container>
+                    <Container className="w-full py-2 flex flex-col " key={dayId}>
+                        <SubHeading className="text-lg font-semibold text-center text-zinc bg-yellow-400 rounded-md p-2 mb-5">
+                            {day.name}
+                        </SubHeading>
+                        <FlatList
+                            data={day.exercises}
+                            renderItem={renderItem}
+                            keyExtractor={(item) => item.name.toString()}
+                        />
+                    </Container>
+
+                ) : (
+                    <Text className="text-lg font-semibold text-center text-white">No hay plan para mostrar</Text>
+                )}
             </Container>
-        </ScrollView>
+        </Container>
     )
 }
 

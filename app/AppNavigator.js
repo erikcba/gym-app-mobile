@@ -1,26 +1,27 @@
-import * as React from 'react';
+import * as React from 'react'
 import { createNativeStackNavigator } from '@react-navigation/native-stack'
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
 import { NavigationContainer } from '@react-navigation/native'
 import Icon from 'react-native-vector-icons/Ionicons'
 import { useNavigation } from '@react-navigation/native'
 
 import { Login } from './components/Login'
 import { Dashboard } from './components/Dashboard'
-import Plan from './views/Plan';
-import VistaPlanes from './views/VistaPlanes';
-import EnConstruccion from './views/EnConstruccion';
-import { TouchableOpacity } from 'react-native';
+import Plan from './views/Plan'
+import VistaPlanes from './views/VistaPlanes'
+import EnConstruccion from './views/EnConstruccion'
+import { TouchableOpacity } from 'react-native'
+import DetalleEjercicio from './views/DetalleEjercicio'
 
 
 const Stack = createNativeStackNavigator()
-const Tab = createBottomTabNavigator()
 
 const DashboardStack = () => {
+    const navigation = useNavigation()
+
     return (
         <Stack.Navigator>
             <Stack.Screen
-                name="Dashboard"
+                name="Dashboardpage"
                 component={Dashboard}
                 options={{
                     headerStyle: { backgroundColor: '#FAC710' },
@@ -36,46 +37,9 @@ const DashboardStack = () => {
                     headerStyle: { backgroundColor: '#FAC710' },
                     headerTintColor: 'black',
                     statusBarColor: "#FAC710",
-                    title: "Mis entrenamientos"
-                }}
-            />
-            <Stack.Screen
-                name="Plan"
-                component={Plan}
-                options={{
-                    headerStyle: { backgroundColor: '#FAC710' },
-                    headerTintColor: 'black',
-                    statusBarColor: "#FAC710",
-                    title: "Plan de entrenamiento"
-                }}
-            />
-            <Stack.Screen
-                name="EnConstruccion"
-                component={EnConstruccion}
-                options={{
-                    headerStyle: { backgroundColor: '#FAC710' },
-                    headerTintColor: 'black',
-                    statusBarColor: "#FAC710",
-                    title: "En Construccion"
-                }}
-            />
-        </Stack.Navigator>
-    );
-};
-
-const PlanStack = () => {
-    const navigation = useNavigation()
-    return (
-        <Stack.Navigator>
-            <Stack.Screen
-                name="Planes"
-                component={VistaPlanes}
-                options={{
-                    headerStyle: { backgroundColor: '#FAC710' },
-                    headerTintColor: 'black',
                     title: "Mis entrenamientos",
                     headerLeft: () => (
-                        <TouchableOpacity onPress={() => navigation.navigate("DashboardTab")}>
+                        <TouchableOpacity onPress={() => navigation.navigate("Dashboard")}>
                             <Icon name="arrow-back" size={24} color="black" style={{ marginLeft: 10 }} />
                         </TouchableOpacity>
                     )
@@ -87,7 +51,18 @@ const PlanStack = () => {
                 options={{
                     headerStyle: { backgroundColor: '#FAC710' },
                     headerTintColor: 'black',
+                    statusBarColor: "#FAC710",
                     title: "Plan de entrenamiento"
+                }}
+            />
+            <Stack.Screen
+                name="DetalleEjercicio"
+                component={DetalleEjercicio}
+                options={{
+                    headerStyle: { backgroundColor: '#FAC710' },
+                    headerTintColor: 'black',
+                    statusBarColor: "#FAC710",
+                    title: "Detalle de ejercicio"
                 }}
             />
             <Stack.Screen
@@ -96,49 +71,16 @@ const PlanStack = () => {
                 options={{
                     headerStyle: { backgroundColor: '#FAC710' },
                     headerTintColor: 'black',
-                    title: "Calcular RM"
+                    statusBarColor: "#FAC710",
+                    title: "En Construcción"
                 }}
             />
         </Stack.Navigator>
-    );
-};
-
-// Define el Tab Navigator
-const AppTabs = () => {
-    return (
-        <Tab.Navigator
-            initialRouteName="DashboardTab"
-            screenOptions={({ route }) => ({
-                tabBarIcon: ({ focused, color, size }) => {
-                    let iconName;
-
-                    if (route.name === 'DashboardTab') {
-                        iconName = focused ? 'home' : 'home-outline'
-                    } else if (route.name === 'EnConstruccion') {
-                        iconName = focused ? 'calculator' : 'calculator-outline'
-                    }
-
-                    // Retorna el icono adecuado
-                    return <Icon name={iconName} size={size} color={color} />
-                },
-                tabBarActiveTintColor: 'black',
-                tabBarInactiveTintColor: 'black',
-                tabBarStyle: { backgroundColor: '#FAC710' },
-            })}
-        >
-            <Tab.Screen
-                name="DashboardTab"
-                component={DashboardStack}
-                options={{ title: "Home", headerShown: false }}
-            />
-          
-        </Tab.Navigator>
-    );
+    )
 }
 
 export const AppNavigator = () => {
     return (
-
         <NavigationContainer independent={true}>
             <Stack.Navigator>
                 <Stack.Screen
@@ -147,13 +89,12 @@ export const AppNavigator = () => {
                     options={{ headerShown: false, statusBarColor: "#1A1A1A" }}
                 />
                 <Stack.Screen
-                    name="MainApp"
-                    component={AppTabs}
+                    name="Dashboard"
+                    component={DashboardStack}
                     options={{ headerShown: false }}
                 />
             </Stack.Navigator>
         </NavigationContainer>
-
     )
 }
 

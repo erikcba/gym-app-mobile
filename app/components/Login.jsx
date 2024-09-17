@@ -16,7 +16,7 @@ export const Login = ({ navigation }) => {
         try {
             await signInWithEmailAndPassword(auth, email, password)
             setLoading(false)
-            navigation.navigate("MainApp")
+            navigation.navigate("Dashboard")
         } catch (error) {
             console.error("Código de error:", error.code);
             console.error("Mensaje de error:", error.message);
@@ -34,9 +34,12 @@ export const Login = ({ navigation }) => {
                         <TextInput
                             onChangeText={(text) => setEmail(text)}
                             value={email}
+                            keyboardType="email-address" 
+                            autoCorrect={false}
                             placeholder="Correo electrónico"
                             placeholderTextColor="#A0AEC0"
-                            className="p-2 bg-zinc-800 rounded-sm border-b-2 border-cyan-500 text-center focus:outline-none focus:border-cyan-300 text-white"
+                            autoCapitalize="none"
+                            className="p-2 bg-zinc-800 rounded-sm border-b-2 border-yellow-500 text-center focus:outline-none focus:border-yellow-300 text-white"
                         />
                     </View>
                     <View className="flex flex-col gap-2 text-white">
@@ -46,7 +49,8 @@ export const Login = ({ navigation }) => {
                             placeholder="Contraseña"
                             placeholderTextColor="#A0AEC0"
                             secureTextEntry
-                            className="p-2 bg-zinc-800 rounded-sm border-b-2 border-cyan-500 text-center focus:outline-none focus:border-cyan-300 text-white"
+                            autoCapitalize="none"
+                            className="p-2 bg-zinc-800 rounded-sm border-b-2 border-yellow-500 text-center focus:outline-none focus:border-yellow-300 text-white"
                         />
                     </View>
                     {error && (
@@ -56,12 +60,12 @@ export const Login = ({ navigation }) => {
                     )}
                     <TouchableOpacity
                         onPress={handleLogIn}
-                        className="flex justify-center items-center gap-2 font-semibold font-lg pb-2 px-4 bg-blue-900 rounded-md hover:bg-blue-700 text-white"
+                        className="flex justify-center items-center gap-2 font-semibold font-lg pb-2 px-4 bg-yellow-400 rounded-md hover:bg-blue-700 "
                     >
                         {loading ? (
-                            <ActivityIndicator size="small" color="#ffffff" />
+                            <ActivityIndicator size="small" color="#242424" />
                         ) : (
-                            <Text className="text-white">Iniciar sesión</Text>
+                            <Text className="text-zinc-900">Iniciar sesión</Text>
                         )}
                     </TouchableOpacity>
                 </View>

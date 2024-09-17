@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { Text, ActivityIndicator, ScrollView, View, TouchableOpacity } from 'react-native'
-import { getAuth, onAuthStateChanged } from "firebase/auth"
+import { Text, ActivityIndicator, ScrollView, View, TouchableOpacity, RefreshControl } from 'react-native'
+import { getAuth } from "firebase/auth"
 import { db } from "../../firebaseConfig"
 import { doc, getDoc, collection, getDocs } from "firebase/firestore"
 import { styled } from 'nativewind'
@@ -18,87 +18,102 @@ const VistaPlanes = ({ navigation }) => {
     const [days, setDays] = useState([])
     const [error, setError] = useState("")
     const [loading, setLoading] = useState(true)
+    const [refreshing, setRefreshing] = useState(false)
 
-    useEffect(() => {
-        const auth = getAuth()
-
-        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+    const fetchPlanData = async () => {
+        try {
+            const auth = getAuth()
+            const user = auth.currentUser
             if (!user) {
-                setLoading(false)
                 setError("No hay usuario autenticado.")
                 return
             }
-    
-            try {
-                const storedPlan = await AsyncStorage.getItem('userPlan')
-                const planPrevio = storedPlan ? JSON.parse(storedPlan) : null
-    
-                const uid = user.uid
-                setUserId(uid)
-    
-                const userDocRef = doc(db, "users", uid)
-                const userDocSnap = await getDoc(userDocRef)
-    
-                if (!userDocSnap.exists()) {
-                    setError("El documento del usuario no existe.")
-                    setLoading(false)
-                    return
-                }
-    
-                const { assignedPlans } = userDocSnap.data()
-                if (!assignedPlans) {
-                    setError("El usuario no tiene un plan asignado.")
-                    setLoading(false)
-                    return
-                }
-    
-                const planDocRef = doc(db, "planesActivos", assignedPlans)
-                const planDocSnap = await getDoc(planDocRef)
-    
-                if (!planDocSnap.exists()) {
-                    setError("El documento del plan no existe.")
-                    setLoading(false)
-                    return
-                }
-    
-                const planData = planDocSnap.data()
-                const daysRef = collection(planDocRef, "days")
-                const daysSnapshot = await getDocs(daysRef)
-                const daysData = daysSnapshot.docs.map((doc) => ({
-                    id: doc.id,
-                    ...doc.data()
-                }))
-    
-                const fechaNuevo = new Date(planData.fecha)
-                const fechaPrevio = planPrevio ? new Date(planPrevio.fecha) : null
-    
-                // Verificar si el plan almacenado es más viejo o no existe
-                if (!fechaPrevio || fechaNuevo > fechaPrevio) {
-                    await AsyncStorage.setItem('userPlan', JSON.stringify({
-                        nombrePlan: planData.nombrePlan,
-                        daysData,
-                        fecha: planData.fecha
-                    }))
-                    setNombrePlan(planData.nombrePlan)
-                    setDays(daysData)
-                } else {
-                    setNombrePlan(planPrevio.nombrePlan)
-                    setDays(planPrevio.daysData)
-                }
-    
-            } catch (error) {
-                console.error("Error al obtener los datos del usuario:", error)
-                setError("Error al obtener los datos del usuario.")
-            } finally {
-                setLoading(false)
-            }
-        })
 
-        return () => unsubscribe()
+            const uid = user.uid
+            setUserId(uid)
+
+            const userDocRef = doc(db, "users", uid)
+            const userDocSnap = await getDoc(userDocRef)
+
+            if (!userDocSnap.exists()) {
+                setError("El documento del usuario no existe.")
+                return
+            }
+
+            const { assignedPlans } = userDocSnap.data()
+            if (!assignedPlans) {
+                setError("El usuario no tiene un plan asignado.")
+                return
+            }
+
+            const planDocRef = doc(db, "planesActivos", assignedPlans)
+            const planDocSnap = await getDoc(planDocRef)
+
+            if (!planDocSnap.exists()) {
+                setError("El documento del plan no existe.")
+                return
+            }
+
+            const planData = planDocSnap.data()
+            const daysRef = collection(planDocRef, "days")
+            const daysSnapshot = await getDocs(daysRef)
+            const daysData = daysSnapshot.docs.map((doc) => ({
+                id: doc.id,
+                ...doc.data()
+            }))
+
+            await AsyncStorage.setItem('userPlan', JSON.stringify({
+                nombrePlan: planData.nombrePlan,
+                daysData,
+                fecha: planData.fecha
+            }))
+            setNombrePlan(planData.nombrePlan)
+            setDays(daysData)
+
+        } catch (error) {
+            console.error("Error al obtener los datos del usuario:", error)
+            setError("Error al obtener los datos del usuario.")
+        }
+    }
+
+    const loadStoredPlan = async () => {
+        try {
+            setLoading(true)
+            const storedPlan = await AsyncStorage.getItem('userPlan')
+            if (storedPlan) {
+                const planPrevio = JSON.parse(storedPlan)
+                setNombrePlan(planPrevio.nombrePlan)
+                setDays(planPrevio.daysData)
+            } else {
+                await fetchPlanData()
+            }
+        } catch (error) {
+            setError("Error al cargar los datos almacenados.")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        loadStoredPlan()
     }, [])
 
+    const onRefresh = async () => {
+        setRefreshing(true)
+        await fetchPlanData()
+        setRefreshing(false)
+    }
+
+
     return (
-        <ScrollView>
+        <ScrollView
+            refreshControl={
+                <RefreshControl
+                    refreshing={refreshing}
+                    onRefresh={onRefresh}  
+                    colors={['#FAC710']} 
+                />
+            }>
             <Container className="items-center bg-zinc-900 p-5 min-h-screen">
                 <Container className="items-center gap-5 w-full h-full">
                     <SubHeading className="flex flex-col text-lg font-semibold text-center text-zinc bg-yellow-400 rounded-md p-2 w-full">
@@ -115,9 +130,8 @@ const VistaPlanes = ({ navigation }) => {
                         ) : days.length > 0 ? (
                             days.map((day, dayIndex) => (
                                 <Container className="w-full my-2 " key={dayIndex}>
-                                    <TouchableOpacity onPress={() => navigation.navigate('Plan', { dayId: day.id, dayName: day.name })} className=" bg-zinc-800 rounded-md px-4 py-6 flex flex-row items-center">
-                                        <Text className="text-lg font-semibold text-center text-white">{day.name}</Text>
-                                        <Icon name="chevron-forward-outline" size={35} color="#808080" className="ml-auto" />
+                                    <TouchableOpacity onPress={() => navigation.navigate('Plan', { dayId: day.id, dayName: day.name })} className=" bg-zinc-800 rounded-md px-4 py-10 flex flex-row justify-center items-center">
+                                        <Text className="text-2xl font-semibold text-center text-white">{day.name}</Text>
                                     </TouchableOpacity>
                                 </Container>
                             ))
